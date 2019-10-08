@@ -59,6 +59,7 @@ import com.dabomstew.pkrandom.pokemon.ItemList;
 import com.dabomstew.pkrandom.pokemon.Move;
 import com.dabomstew.pkrandom.pokemon.MoveLearnt;
 import com.dabomstew.pkrandom.pokemon.Pokemon;
+import com.dabomstew.pkrandom.pokemon.Palette;
 import com.dabomstew.pkrandom.pokemon.Trainer;
 import com.dabomstew.pkrandom.pokemon.TrainerPokemon;
 import compressors.Gen2Decmp;
@@ -351,6 +352,7 @@ public class Gen2RomHandler extends AbstractGBCRomHandler {
         // Fetch our names
         String[] pokeNames = readPokemonNames();
         int offs = romEntry.getValue("PokemonStatsOffset");
+        int pal_offs = romEntry.getValue("PokemonPalettes");
         // Get base stats
         for (int i = 1; i <= Gen2Constants.pokemonCount; i++) {
             pokes[i] = new Pokemon();
@@ -358,6 +360,7 @@ public class Gen2RomHandler extends AbstractGBCRomHandler {
             loadBasicPokeStats(pokes[i], offs + (i - 1) * Gen2Constants.baseStatsEntrySize);
             // Name?
             pokes[i].name = pokeNames[i];
+            loadPalettes(pokes[i], pal_offs + (i * Gen2Constants.paletteSize));
         }
 
         // Get evolutions
@@ -369,6 +372,7 @@ public class Gen2RomHandler extends AbstractGBCRomHandler {
         // Write pokemon names
         int offs = romEntry.getValue("PokemonNamesOffset");
         int len = romEntry.getValue("PokemonNamesLength");
+        int pal_offs = romEntry.getValue("PokemonPalettes");
         for (int i = 1; i <= Gen2Constants.pokemonCount; i++) {
             int stringOffset = offs + (i - 1) * len;
             writeFixedLengthString(pokes[i].name, stringOffset, len);
@@ -377,6 +381,7 @@ public class Gen2RomHandler extends AbstractGBCRomHandler {
         int offs2 = romEntry.getValue("PokemonStatsOffset");
         for (int i = 1; i <= Gen2Constants.pokemonCount; i++) {
             saveBasicPokeStats(pokes[i], offs2 + (i - 1) * Gen2Constants.baseStatsEntrySize);
+            savePalettes(pokes[i], pal_offs + (i * Gen2Constants.paletteSize));
         }
         // Write evolutions
         writeEvosAndMovesLearnt(true, null);
@@ -463,6 +468,13 @@ public class Gen2RomHandler extends AbstractGBCRomHandler {
         pkmn.picDimensions = rom[offset + Gen2Constants.bsPicDimensionsOffset] & 0xFF;
 
     }
+    
+    private void loadPalettes(Pokemon pkmn, int offset) {
+        pkmn.palette1 = new Palette(((rom[offset + 1] & 0xFF) << 8) | rom[offset] & 0xFF);
+        pkmn.palette2 = new Palette(((rom[offset + 3] & 0xFF) << 8) | rom[offset + 2] & 0xFF);
+        pkmn.shiny_palette1 = new Palette(((rom[offset + 5] & 0xFF) << 8) | rom[offset + 4] & 0xFF);
+        pkmn.shiny_palette2 = new Palette(((rom[offset + 7] & 0xFF) << 8) | rom[offset + 6] & 0xFF);
+    }
 
     private void saveBasicPokeStats(Pokemon pkmn, int offset) {
         rom[offset + Gen2Constants.bsHPOffset] = (byte) pkmn.hp;
@@ -482,6 +494,17 @@ public class Gen2RomHandler extends AbstractGBCRomHandler {
         rom[offset + Gen2Constants.bsCommonHeldItemOffset] = (byte) pkmn.commonHeldItem;
         rom[offset + Gen2Constants.bsRareHeldItemOffset] = (byte) pkmn.rareHeldItem;
         rom[offset + Gen2Constants.bsGrowthCurveOffset] = pkmn.growthCurve.toByte();
+    }
+    
+    private void savePalettes(Pokemon pkmn, int offset) {
+        rom[offset] = (byte) (pkmn.palette1.composeColor() & 0xFF);
+        rom[offset + 1] = (byte) ((pkmn.palette1.composeColor() >> 8) & 0xFF);
+        rom[offset + 2] = (byte) (pkmn.palette2.composeColor() & 0xFF);
+        rom[offset + 3] = (byte) ((pkmn.palette2.composeColor() >> 8) & 0xFF);
+        rom[offset + 4] = (byte) (pkmn.shiny_palette1.composeColor() & 0xFF);
+        rom[offset + 5] = (byte) ((pkmn.shiny_palette1.composeColor() >> 8) & 0xFF);
+        rom[offset + 6] = (byte) (pkmn.shiny_palette2.composeColor() & 0xFF);
+        rom[offset + 7] = (byte) ((pkmn.shiny_palette2.composeColor() >> 8) & 0xFF);
     }
 
     private String[] readPokemonNames() {
@@ -1348,7 +1371,9 @@ public class Gen2RomHandler extends AbstractGBCRomHandler {
                 realPointer += (method == 5 ? 4 : 3);
             }
             // split evos don't carry stats
-            if (pkmn.evolutionsFrom.size() > 1) {
+            
+            //gs changed to only do this for eevee
+            if (pkmn.evolutionsFrom.size() > 3) {
                 for (Evolution e : pkmn.evolutionsFrom) {
                     e.carryStats = false;
                 }
@@ -2208,10 +2233,10 @@ public class Gen2RomHandler extends AbstractGBCRomHandler {
         int w = picWidth * 8;
         int h = picHeight * 8;
 
-        // Palette?
+        // Palette
         // Two colors per Pokemon + two more for shiny, unlike pics there is a
         // zero-entry.
-        // Black and white are left alone at the start and end of the palette.
+        // Black and white are left alone at the start and end of the palette. Might be fun to remove this condition eventually, but I'd need to preserve the descending order of magnitude.
         int[] palette = new int[] { 0xFFFFFFFF, 0xFFAAAAAA, 0xFF666666, 0xFF000000 };
         int paletteOffset = romEntry.getValue("PokemonPalettes") + mascot.number * 8;
         if (random.nextInt(10) == 0) {

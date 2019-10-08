@@ -36,6 +36,8 @@ public class Pokemon implements Comparable<Pokemon> {
     public int number;
 
     public Type primaryType, secondaryType;
+    
+    public Palette palette1, palette2, shiny_palette1, shiny_palette2;
 
     public int hp, attack, defense, spatk, spdef, speed, special;
 

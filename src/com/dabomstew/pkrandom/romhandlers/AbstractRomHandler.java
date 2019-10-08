@@ -61,6 +61,7 @@ import com.dabomstew.pkrandom.pokemon.Move;
 import com.dabomstew.pkrandom.pokemon.MoveCategory;
 import com.dabomstew.pkrandom.pokemon.MoveLearnt;
 import com.dabomstew.pkrandom.pokemon.Pokemon;
+import com.dabomstew.pkrandom.pokemon.Palette;
 import com.dabomstew.pkrandom.pokemon.Trainer;
 import com.dabomstew.pkrandom.pokemon.TrainerPokemon;
 import com.dabomstew.pkrandom.pokemon.Type;
@@ -72,12 +73,51 @@ public abstract class AbstractRomHandler implements RomHandler {
     protected List<Pokemon> noLegendaryList, onlyLegendaryList;
     protected final Random random;
     protected PrintStream logStream;
+    private HashSet<String> singlePalette;
 
     /* Constructor */
 
     public AbstractRomHandler(Random random, PrintStream logStream) {
         this.random = random;
         this.logStream = logStream;
+        singlePalette = new HashSet<String>();
+        singlePalette.add("metapod");
+        singlePalette.add("kakuna");
+        //singlePalette.add("parasect");
+        //singlePalette.add("venomoth");
+        singlePalette.add("electabuzz");
+        singlePalette.add("jolteon");
+        singlePalette.add("eevee");
+        singlePalette.add("espeon");
+        singlePalette.add("vaporeon");
+        singlePalette.add("elekid");
+        singlePalette.add("zapdos");
+        singlePalette.add("poliwrath");
+        singlePalette.add("machop");
+        singlePalette.add("machamp");
+        //singlePalette.add("vulpix");
+        //singlePalette.add("ninetales");
+        singlePalette.add("flareon");
+        //singlePalette.add("slugma");
+        singlePalette.add("aerodactyl");
+        singlePalette.add("articuno");
+        //singlePalette.add("sandshrew");
+        singlePalette.add("nidoking");
+        singlePalette.add("rhyhorn");
+        singlePalette.add("rhydon");
+        singlePalette.add("piloswine");
+        //singlePalette.add("cloyster");
+        singlePalette.add("rattata");
+        singlePalette.add("lickitung");
+        //singlePalette.add("koffing");
+        //singlePalette.add("weezing");
+        singlePalette.add("slowpoke");
+        singlePalette.add("mew");
+        singlePalette.add("wobbuffet");
+        singlePalette.add("kabuto");
+        singlePalette.add("kabutops");
+        singlePalette.add("psyduck");
+        singlePalette.add("poliwhirl");
     }
 
     /*
@@ -357,6 +397,7 @@ public abstract class AbstractRomHandler implements RomHandler {
         }
         return t;
     }
+    
 
     @Override
     public void randomizePokemonTypes(boolean evolutionSanity) {
@@ -386,11 +427,28 @@ public abstract class AbstractRomHandler implements RomHandler {
                             }
                         }
                     }
+                    Palette.randomPalettes(pk, AbstractRomHandler.this.random, singlePalette);
+                    pk.shiny_palette1 = new Palette(null, AbstractRomHandler.this.random);
+                    pk.shiny_palette2 = new Palette(null, AbstractRomHandler.this.random);
                 }
             }, new EvolvedPokemonAction() {
                 public void applyTo(Pokemon evFrom, Pokemon evTo, boolean toMonIsFinalEvo) {
                     evTo.primaryType = evFrom.primaryType;
                     evTo.secondaryType = evFrom.secondaryType;
+                    evTo.palette1 = evFrom.palette1;
+                    if (singlePalette.contains(evTo.name.toLowerCase()))
+                    {
+                        evTo.palette2 = new Palette(AbstractRomHandler.this.random);
+                        Palette.relativeShade(evTo.palette1, evTo.palette2, AbstractRomHandler.this.random);
+                    }
+                    else
+                    {
+                        evTo.palette2 = evFrom.palette2;
+                    }
+                    
+
+                    evTo.shiny_palette1 = evFrom.shiny_palette1;
+                    evTo.shiny_palette2 = evFrom.shiny_palette2;
 
                     if (evTo.secondaryType == null) {
                         double chance = toMonIsFinalEvo ? 0.25 : 0.15;
@@ -399,7 +457,16 @@ public abstract class AbstractRomHandler implements RomHandler {
                             while (evTo.secondaryType == evTo.primaryType) {
                                 evTo.secondaryType = randomType();
                             }
+                            if (!singlePalette.contains(evTo.name.toLowerCase()))
+                            {
+                                evTo.palette2 = new Palette(evTo.secondaryType, AbstractRomHandler.this.random);
+                                Palette.relativeShade(evTo.palette1, evTo.palette2, AbstractRomHandler.this.random);
+                            }
                         }
+                    }
+                    if (AbstractRomHandler.this.random.nextInt(10) == 0)
+                    {
+                        Palette.randomPalettes(evTo, AbstractRomHandler.this.random, singlePalette);
                     }
                 }
             });

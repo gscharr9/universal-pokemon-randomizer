@@ -392,9 +392,12 @@ public class RomFunctions {
                 if (currLineWC > 0) {
                     reqLength++;
                 }
+                //GS: in case I need this later, the last line of this if statement was:
+                //|| currLineLastChar == '!' || currLineLastChar == '…' || currLineLastChar == ','))) {
+                //I altered it to fix that mystery character, which is meant to be ellipses
                 if ((currLineCC + reqLength > maxLineLength)
                         || (currLineCC >= sentenceNewLineSize && (currLineLastChar == '.' || currLineLastChar == '?'
-                                || currLineLastChar == '!' || currLineLastChar == '…' || currLineLastChar == ','))) {
+                                || currLineLastChar == '!' || currLineLastChar == '�' || currLineLastChar == ','))) {
                     // new line
                     // Save current line, if applicable
                     if (currLineWC > 0) {

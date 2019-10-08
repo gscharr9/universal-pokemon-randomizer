@@ -16,6 +16,8 @@ public class Gen2Constants {
     public static final String vietCrystalROMName = "Pokemon VietCrystal";
 
     public static final int pokemonCount = 251, moveCount = 251;
+    
+    public static final int paletteSize = 8;
 
     public static final int baseStatsEntrySize = 0x20;
 
