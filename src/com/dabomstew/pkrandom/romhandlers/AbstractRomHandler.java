@@ -438,7 +438,7 @@ public abstract class AbstractRomHandler implements RomHandler {
                     evTo.palette1 = evFrom.palette1;
                     if (singlePalette.contains(evTo.name.toLowerCase()))
                     {
-                        evTo.palette2 = new Palette(AbstractRomHandler.this.random);
+                        evTo.palette2 = new Palette(evTo.palette1);
                         Palette.relativeShade(evTo.palette1, evTo.palette2, AbstractRomHandler.this.random);
                     }
                     else

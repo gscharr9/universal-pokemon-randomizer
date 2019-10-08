@@ -245,12 +245,12 @@ public class Palette {
     
     public void darken()
     {
-        scale(.7);
+        scale(.6);
     }
     
     public void brighten()
     {
-        scale(1.3);
+        scale(1.4);
     }
     
     public void scale(double factor)
@@ -335,7 +335,7 @@ public class Palette {
         else if ((p.secondaryType != null) && (primary_choice < 45))
         {
             p.palette1 = new Palette(p.secondaryType, random);
-            if ((singlePalette.contains(p.name)) || (primary_choice < 37))
+            if ((singlePalette.contains(p.name)) || (primary_choice < 10))
             {
                 p.palette2 = new Palette(p.palette1);
             }
